@@ -52,12 +52,7 @@ export class AnalyticsService {
         include: {
           betLegs: {
             include: {
-              game: {
-                include: {
-                  homeTeam: true,
-                  awayTeam: true,
-                },
-              },
+              game: true,
             },
           },
         },

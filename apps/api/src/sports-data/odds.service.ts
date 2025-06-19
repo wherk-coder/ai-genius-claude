@@ -65,7 +65,7 @@ export class OddsService {
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
-    this.oddsApiKey = this.configService.get<string>('ODDS_API_KEY');
+    this.oddsApiKey = this.configService.get<string>('ODDS_API_KEY') || '';
     
     if (this.oddsApiKey) {
       this.initializeScheduledTasks();
@@ -290,22 +290,22 @@ export class OddsService {
   /**
    * Map external sport keys to internal format
    */
-  private mapSportKey(sportKey: string): string {
-    const mapping: { [key: string]: string } = {
+  private mapSportKey(sportKey: string): 'NFL' | 'NBA' | 'MLB' | 'NHL' | 'NCAAF' | 'NCAAB' | 'SOCCER' | 'TENNIS' | 'GOLF' | 'MMA' | 'BOXING' | 'RACING' {
+    const mapping: { [key: string]: 'NFL' | 'NBA' | 'MLB' | 'NHL' | 'NCAAF' | 'NCAAB' | 'SOCCER' | 'TENNIS' | 'GOLF' | 'MMA' | 'BOXING' | 'RACING' } = {
       'americanfootball_nfl': 'NFL',
       'basketball_nba': 'NBA',
       'baseball_mlb': 'MLB',
       'icehockey_nhl': 'NHL',
       'americanfootball_ncaaf': 'NCAAF',
       'basketball_ncaab': 'NCAAB',
-      'soccer_usa_mls': 'Soccer',
-      'tennis_atp': 'Tennis',
-      'golf_pga': 'Golf',
+      'soccer_usa_mls': 'SOCCER',
+      'tennis_atp': 'TENNIS',
+      'golf_pga': 'GOLF',
       'mma_mixed_martial_arts': 'MMA',
-      'boxing_heavyweight': 'Boxing',
+      'boxing_heavyweight': 'BOXING',
     };
 
-    return mapping[sportKey] || sportKey.toUpperCase();
+    return mapping[sportKey] || 'RACING';
   }
 
   /**
@@ -322,7 +322,7 @@ export class OddsService {
       });
 
       // Group by market type
-      const comparison = odds.reduce((acc, odd) => {
+      const comparison: any = odds.reduce((acc: any, odd) => {
         if (!acc[odd.market]) {
           acc[odd.market] = {};
         }
@@ -343,7 +343,7 @@ export class OddsService {
       // Find best odds for each outcome
       Object.keys(comparison).forEach(market => {
         Object.keys(comparison[market]).forEach(outcome => {
-          comparison[market][outcome] = comparison[market][outcome].sort((a, b) => {
+          comparison[market][outcome] = comparison[market][outcome].sort((a: any, b: any) => {
             // For positive odds, higher is better
             // For negative odds, closer to 0 is better
             if (a.price > 0 && b.price > 0) return b.price - a.price;
@@ -367,7 +367,7 @@ export class OddsService {
    */
   async getUpcomingGamesWithOdds(sport?: string, limit = 20): Promise<any> {
     try {
-      const where = sport ? { sport } : {};
+      const where = sport ? { sport: sport as any } : {};
       
       const games = await this.prisma.game.findMany({
         where: {
@@ -389,7 +389,7 @@ export class OddsService {
 
       return games.map(game => ({
         ...game,
-        bestOdds: this.getBestOddsForGame(game.odds),
+        bestOdds: this.getBestOddsForGame(game.odds || []),
       }));
     } catch (error) {
       this.logger.error('Failed to get upcoming games:', error);
@@ -401,7 +401,7 @@ export class OddsService {
    * Helper to extract best odds for a game
    */
   private getBestOddsForGame(odds: any[]): any {
-    const grouped = odds.reduce((acc, odd) => {
+    const grouped: any = odds.reduce((acc: any, odd) => {
       if (!acc[odd.outcome]) {
         acc[odd.outcome] = [];
       }
@@ -411,7 +411,7 @@ export class OddsService {
 
     Object.keys(grouped).forEach(outcome => {
       grouped[outcome] = grouped[outcome]
-        .sort((a, b) => {
+        .sort((a: any, b: any) => {
           if (a.price > 0 && b.price > 0) return b.price - a.price;
           if (a.price < 0 && b.price < 0) return a.price - b.price;
           if (a.price > 0 && b.price < 0) return -1;

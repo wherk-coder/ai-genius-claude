@@ -53,7 +53,7 @@ export class NotificationsService {
         amount: bet.amount,
         potentialPayout: bet.potentialPayout,
         odds: bet.odds,
-        sportsbook: bet.sportsbook,
+        sportsbook: bet.sportsbook || undefined,
       });
     }
   }

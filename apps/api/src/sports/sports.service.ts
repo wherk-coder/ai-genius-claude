@@ -39,29 +39,35 @@ export class SportsService {
   async findTeamById(id: string) {
     const team = await this.prisma.team.findUnique({
       where: { id },
-      include: {
-        homeGames: {
-          include: {
-            awayTeam: true,
-          },
-          orderBy: { startTime: 'desc' },
-          take: 10,
-        },
-        awayGames: {
-          include: {
-            homeTeam: true,
-          },
-          orderBy: { startTime: 'desc' },
-          take: 10,
-        },
-      },
     });
 
     if (!team) {
       throw new NotFoundException(`Team with ID ${id} not found`);
     }
 
-    return team;
+    if (!team) {
+      throw new NotFoundException(`Team with ID ${id} not found`);
+    }
+
+    // Get recent games for this team
+    const recentGames = await this.prisma.game.findMany({
+      where: {
+        OR: [
+          { homeTeam: team.name },
+          { awayTeam: team.name },
+        ],
+      },
+      orderBy: { gameTime: 'desc' },
+      take: 10,
+      include: {
+        odds: true,
+      },
+    });
+
+    return {
+      ...team,
+      recentGames,
+    };
   }
 
   // Games
@@ -70,8 +76,7 @@ export class SportsService {
       return await this.prisma.game.create({
         data: createGameDto,
         include: {
-          homeTeam: true,
-          awayTeam: true,
+          odds: true,
         },
       });
     } catch (error) {
@@ -98,15 +103,15 @@ export class SportsService {
       ...(filters?.sport && { sport: filters.sport }),
       ...(filters?.status && { status: filters.status }),
       ...(filters?.dateFrom || filters?.dateTo) && {
-        startTime: {
+        gameTime: {
           ...(filters.dateFrom && { gte: filters.dateFrom }),
           ...(filters.dateTo && { lte: filters.dateTo }),
         }
       },
       ...(filters?.teamId && {
         OR: [
-          { homeTeamId: filters.teamId },
-          { awayTeamId: filters.teamId },
+          { homeTeam: { contains: filters.teamId } },
+          { awayTeam: { contains: filters.teamId } },
         ]
       }),
     };
@@ -114,11 +119,10 @@ export class SportsService {
     return this.prisma.game.findMany({
       where,
       include: {
-        homeTeam: true,
-        awayTeam: true,
+        odds: true,
       },
       orderBy: {
-        startTime: 'desc',
+        gameTime: 'desc',
       },
     });
   }
@@ -127,8 +131,7 @@ export class SportsService {
     const game = await this.prisma.game.findUnique({
       where: { id },
       include: {
-        homeTeam: true,
-        awayTeam: true,
+        odds: true,
         betLegs: {
           include: {
             bet: {
@@ -162,8 +165,7 @@ export class SportsService {
         where: { id },
         data: updateGameDto,
         include: {
-          homeTeam: true,
-          awayTeam: true,
+          odds: true,
         },
       });
 
@@ -180,7 +182,7 @@ export class SportsService {
 
   async getUpcomingGames(sport?: Sport, limit: number = 20) {
     const where: Prisma.GameWhereInput = {
-      startTime: {
+      gameTime: {
         gt: new Date(),
       },
       ...(sport && { sport }),
@@ -189,11 +191,10 @@ export class SportsService {
     return this.prisma.game.findMany({
       where,
       include: {
-        homeTeam: true,
-        awayTeam: true,
+        odds: true,
       },
       orderBy: {
-        startTime: 'asc',
+        gameTime: 'asc',
       },
       take: limit,
     });
@@ -208,11 +209,10 @@ export class SportsService {
     return this.prisma.game.findMany({
       where,
       include: {
-        homeTeam: true,
-        awayTeam: true,
+        odds: true,
       },
       orderBy: {
-        startTime: 'asc',
+        gameTime: 'asc',
       },
     });
   }
@@ -221,16 +221,29 @@ export class SportsService {
     const game = await this.findGameById(gameId);
     return {
       gameId: game.id,
-      homeTeam: game.homeTeam.name,
-      awayTeam: game.awayTeam.name,
-      startTime: game.startTime,
+      homeTeam: game.homeTeam,
+      awayTeam: game.awayTeam,
+      gameTime: game.gameTime,
       odds: game.odds,
-      props: game.props,
     };
   }
 
-  async updateGameOdds(gameId: string, odds: any) {
-    return this.updateGame(gameId, { odds });
+  async updateGameOdds(gameId: string, oddsData: any[]) {
+    // Clear existing odds for this game
+    await this.prisma.odds.deleteMany({
+      where: { gameId },
+    });
+
+    // Create new odds records
+    const odds = await this.prisma.odds.createMany({
+      data: oddsData.map(odd => ({
+        ...odd,
+        gameId,
+        lastUpdate: new Date(),
+      })),
+    });
+
+    return odds;
   }
 
   async getSportStats(sport: Sport) {
@@ -240,7 +253,7 @@ export class SportsService {
       this.prisma.game.count({ 
         where: { 
           sport, 
-          startTime: { gt: new Date() } 
+          gameTime: { gt: new Date() } 
         } 
       }),
       this.prisma.team.count({ where: { sport } }),

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, TrendingUp, AlertTriangle } from 'lucide-react'
-import { apiClient } from '@/lib/api-client'
+import apiClient from '@/lib/api-client'
 
 interface ParsedBet {
   description: string

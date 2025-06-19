@@ -18,6 +18,7 @@ export interface WelcomeEmailData {
 
 export interface BetConfirmationEmailData {
   name: string;
+  email: string;
   betType: string;
   description: string;
   amount: number;

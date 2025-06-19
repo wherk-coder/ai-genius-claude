@@ -34,8 +34,7 @@ export class BetsService {
             include: {
               game: {
                 include: {
-                  homeTeam: true,
-                  awayTeam: true,
+                  odds: true,
                 }
               }
             }
@@ -78,12 +77,7 @@ export class BetsService {
       include: {
         betLegs: {
           include: {
-            game: {
-              include: {
-                homeTeam: true,
-                awayTeam: true,
-              }
-            }
+            game: true
           }
         },
         insights: true,
@@ -100,12 +94,7 @@ export class BetsService {
       include: {
         betLegs: {
           include: {
-            game: {
-              include: {
-                homeTeam: true,
-                awayTeam: true,
-              }
-            }
+            game: true
           }
         },
         insights: true,
@@ -137,8 +126,7 @@ export class BetsService {
             include: {
               game: {
                 include: {
-                  homeTeam: true,
-                  awayTeam: true,
+                  odds: true,
                 }
               }
             }

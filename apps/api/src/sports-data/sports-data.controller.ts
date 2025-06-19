@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { SportsDataService } from './sports-data.service';
 import { WebhookService, GameUpdateWebhook, OddsUpdateWebhook } from './webhook.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Sports Data')
 @Controller('api/v1/sports-data')

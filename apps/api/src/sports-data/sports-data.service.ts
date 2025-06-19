@@ -16,7 +16,7 @@ export class SportsDataService {
    */
   async getLiveGames(sport?: string): Promise<any[]> {
     try {
-      const where = sport ? { sport } : {};
+      const where = sport ? { sport: sport as any } : {};
       
       return await this.prisma.game.findMany({
         where: {
@@ -46,7 +46,7 @@ export class SportsDataService {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + days);
 
-      const where = sport ? { sport } : {};
+      const where = sport ? { sport: sport as any } : {};
       
       return await this.prisma.game.findMany({
         where: {
@@ -80,7 +80,7 @@ export class SportsDataService {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const where = sport ? { sport } : {};
+      const where = sport ? { sport: sport as any } : {};
       
       return await this.prisma.game.findMany({
         where: {
@@ -224,7 +224,7 @@ export class SportsDataService {
         },
       });
 
-      const formatted = stats.reduce((acc, stat) => {
+      const formatted = stats.reduce((acc: any, stat) => {
         if (!acc[stat.sport]) {
           acc[stat.sport] = {};
         }

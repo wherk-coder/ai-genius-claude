@@ -11,17 +11,22 @@ export class CreateGameDto {
   @IsEnum(Sport)
   sport: Sport;
 
-  @ApiProperty({ example: 'clv123home456' })
+  @ApiProperty({ example: 'Kansas City Chiefs' })
   @IsString()
-  homeTeamId: string;
+  homeTeam: string;
 
-  @ApiProperty({ example: 'clv123away456' })
+  @ApiProperty({ example: 'Buffalo Bills' })
   @IsString()
-  awayTeamId: string;
+  awayTeam: string;
+
+  @ApiProperty({ example: 'NFL' })
+  @IsOptional()
+  @IsString()
+  league?: string;
 
   @ApiProperty({ example: '2024-01-15T18:00:00Z' })
   @IsDateString()
-  startTime: string;
+  gameTime: string;
 
   @ApiProperty({ example: 'scheduled' })
   @IsString()
@@ -37,27 +42,14 @@ export class CreateGameDto {
   @IsNumber()
   awayScore?: number;
 
-  @ApiProperty({ 
-    required: false,
-    example: {
-      spread: { home: -3.5, away: 3.5 },
-      moneyline: { home: -180, away: 155 },
-      total: { over: 47.5, under: 47.5 }
-    }
-  })
+  @ApiProperty({ required: false, example: 'Q3' })
   @IsOptional()
-  @IsObject()
-  odds?: any;
+  @IsString()
+  period?: string;
 
-  @ApiProperty({ 
-    required: false,
-    example: {
-      player_props: [
-        { player: 'Patrick Mahomes', type: 'passing_yards', line: 289.5 }
-      ]
-    }
-  })
+  @ApiProperty({ required: false, example: '5:32' })
   @IsOptional()
-  @IsObject()
-  props?: any;
+  @IsString()
+  timeRemaining?: string;
+
 }

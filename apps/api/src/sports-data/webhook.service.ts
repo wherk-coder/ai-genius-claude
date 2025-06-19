@@ -244,12 +244,12 @@ export class WebhookService {
       const { bet, legs } = parlayData;
       
       // Check if all legs are settled
-      const pendingLegs = legs.filter(leg => !leg.result);
+      const pendingLegs = legs.filter((leg: any) => !leg.result);
       if (pendingLegs.length > 0) continue;
 
       // Determine parlay result
-      const lostLegs = legs.filter(leg => leg.result === 'LOST');
-      const pushedLegs = legs.filter(leg => leg.result === 'PUSHED');
+      const lostLegs = legs.filter((leg: any) => leg.result === 'LOST');
+      const pushedLegs = legs.filter((leg: any) => leg.result === 'PUSHED');
 
       let status: 'WON' | 'LOST' | 'PUSHED';
       let actualPayout = 0;

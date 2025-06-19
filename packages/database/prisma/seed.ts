@@ -95,21 +95,13 @@ async function main() {
       create: {
         externalId: 'nfl-week1-kc-buf',
         sport: Sport.NFL,
-        homeTeamId: chiefs.id,
-        awayTeamId: bills.id,
-        startTime: new Date('2024-01-15T18:00:00Z'),
+        homeTeam: chiefs.name,
+        awayTeam: bills.name,
+        league: 'NFL',
+        gameTime: new Date('2024-01-15T18:00:00Z'),
         status: 'scheduled',
-        odds: {
-          spread: { home: -3.5, away: 3.5 },
-          moneyline: { home: -180, away: 155 },
-          total: { over: 47.5, under: 47.5 }
-        },
-        props: {
-          player_props: [
-            { player: 'Josh Allen', type: 'passing_yards', line: 267.5 },
-            { player: 'Patrick Mahomes', type: 'passing_yards', line: 289.5 }
-          ]
-        }
+        homeScore: null,
+        awayScore: null,
       },
     });
   }
@@ -121,21 +113,13 @@ async function main() {
       create: {
         externalId: 'nba-regular-lal-bos',
         sport: Sport.NBA,
-        homeTeamId: lakers.id,
-        awayTeamId: celtics.id,
-        startTime: new Date('2024-01-20T21:00:00Z'),
+        homeTeam: lakers.name,
+        awayTeam: celtics.name,
+        league: 'NBA',
+        gameTime: new Date('2024-01-20T21:00:00Z'),
         status: 'scheduled',
-        odds: {
-          spread: { home: -2.5, away: 2.5 },
-          moneyline: { home: -125, away: 105 },
-          total: { over: 225.5, under: 225.5 }
-        },
-        props: {
-          player_props: [
-            { player: 'LeBron James', type: 'points', line: 25.5 },
-            { player: 'Jayson Tatum', type: 'points', line: 27.5 }
-          ]
-        }
+        homeScore: null,
+        awayScore: null,
       },
     });
   }

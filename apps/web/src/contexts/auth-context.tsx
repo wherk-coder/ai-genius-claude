@@ -33,17 +33,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function initializeAuth() {
     try {
-      // Load token from localStorage
-      apiClient.loadToken()
-      
-      // Try to get user profile if token exists
-      if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
-        const userData = await apiClient.getProfile()
+      // DEMO MODE: Skip API calls and set demo user
+      if (typeof window !== 'undefined' && localStorage.getItem('demo_user')) {
+        const userData = {
+          id: 'demo-user-1',
+          email: 'demo@aibettingassistant.com',
+          name: 'Demo User',
+          role: 'USER' as const
+        }
         setUser(userData)
       }
     } catch (error) {
-      // If token is invalid, clear it
-      apiClient.clearToken()
       setUser(null)
     } finally {
       setIsLoading(false)
@@ -52,15 +52,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     try {
-      const result = await apiClient.login(email, password)
-      setUser(result.user)
-      
-      // Store refresh token if provided
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user_data', JSON.stringify(result.user))
+      // DEMO MODE: Simulate successful login
+      const userData = {
+        id: 'demo-user-1',
+        email: email,
+        name: 'Demo User',
+        role: 'USER' as const
       }
       
-      return result
+      setUser(userData)
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('demo_user', 'true')
+        localStorage.setItem('user_data', JSON.stringify(userData))
+      }
+      
+      return { token: 'demo-token', user: userData }
     } catch (error) {
       throw error
     }

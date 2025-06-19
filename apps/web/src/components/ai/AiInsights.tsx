@@ -16,7 +16,7 @@ import {
   CheckCircle,
   Info
 } from 'lucide-react'
-import { apiClient } from '@/lib/api-client'
+import apiClient from '@/lib/api-client'
 
 interface BettingInsight {
   type: 'performance' | 'recommendation' | 'risk_management' | 'market_analysis'
