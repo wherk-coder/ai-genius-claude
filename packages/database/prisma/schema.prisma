@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SubscriptionTier {
+  FREE
+  PLUS
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELLED
+  PAST_DUE
+}
+
+enum BetStatus {
+  PENDING
+  WON
+  LOST
+  PUSHED
+  CANCELLED
+}
+
+enum BetType {
+  STRAIGHT
+  PARLAY
+  PROP
+  TEASER
+  ROUND_ROBIN
+}
+
+enum Sport {
+  NFL
+  NBA
+  MLB
+  NHL
+  NCAAF
+  NCAAB
+  SOCCER
+  TENNIS
+  GOLF
+  MMA
+  BOXING
+  RACING
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  password          String
+  name              String?
+  role              Role               @default(USER)
+  emailVerified     DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  profile           Profile?
+  subscription      Subscription?
+  bets              Bet[]
+  betReceipts       BetReceipt[]
+  customModels      CustomModel[]
+  insights          Insight[]
+  notifications     Notification[]
+}
+
+model Profile {
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  preferredSports   Sport[]
+  bettingLimit      Float?
+  timeZone          String             @default("UTC")
+  notifications     Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Subscription {
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tier              SubscriptionTier   @default(FREE)
+  status            SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId  String?            @unique
+  stripeSubId       String?            @unique
+  
+  startDate         DateTime           @default(now())
+  endDate           DateTime?
+  cancelledAt       DateTime?
+  
+  sportPackages     Sport[]
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Bet {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type              BetType
+  status            BetStatus          @default(PENDING)
+  sport             Sport
+  
+  amount            Float
+  odds              Float
+  potentialPayout   Float
+  actualPayout      Float?
+  
+  description       String
+  betSlipId         String?
+  sportsbook        String?
+  
+  placedAt          DateTime
+  settledAt         DateTime?
+  
+  betLegs           BetLeg[]
+  receipt           BetReceipt?        @relation(fields: [receiptId], references: [id])
+  receiptId         String?
+  
+  insights          Insight[]
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model BetLeg {
+  id                String             @id @default(cuid())
+  betId             String
+  bet               Bet                @relation(fields: [betId], references: [id], onDelete: Cascade)
+  
+  gameId            String
+  game              Game               @relation(fields: [gameId], references: [id])
+  
+  type              String?            // MONEYLINE, SPREAD, TOTAL, PROP
+  selection         String
+  odds              Float
+  handicap          Float?
+  total             Float?
+  result            BetStatus?         // WON, LOST, PUSHED for settlement
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model BetReceipt {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  imageUrl          String
+  ocrData           Json?
+  processedAt       DateTime?
+  
+  bets              Bet[]
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Game {
+  id                String             @id @default(cuid())
+  externalId        String             @unique
+  sport             Sport
+  
+  homeTeam          String
+  awayTeam          String
+  league            String?
+  
+  gameTime          DateTime
+  status            String
+  
+  homeScore         Int?
+  awayScore         Int?
+  period            String?
+  timeRemaining     String?
+  
+  odds              Odds[]
+  betLegs           BetLeg[]
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Odds {
+  id                String             @id @default(cuid())
+  gameId            String
+  game              Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  
+  bookmaker         String
+  bookmakerTitle    String
+  market            String
+  outcome           String
+  price             Float
+  point             Float?
+  
+  lastUpdate        DateTime
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  @@unique([gameId, bookmaker, market, outcome])
+}
+
+model Team {
+  id                String             @id @default(cuid())
+  externalId        String             @unique
+  name              String
+  abbreviation      String
+  sport             Sport
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model CustomModel {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name              String
+  description       String?
+  sport             Sport
+  
+  configuration     Json
+  performance       Json?
+  
+  isPublic          Boolean            @default(false)
+  isActive          Boolean            @default(true)
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Insight {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  betId             String?
+  bet               Bet?               @relation(fields: [betId], references: [id])
+  
+  type              String
+  title             String
+  content           String
+  confidence        Float?
+  
+  metadata          Json?
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Notification {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type              String
+  title             String
+  message           String
+  
+  read              Boolean            @default(false)
+  readAt            DateTime?
+  
+  metadata          Json?
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
